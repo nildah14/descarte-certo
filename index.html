@@ -376,7 +376,34 @@ $('#localZoomIn')?.addEventListener('click',()=>setLocalZoom(localZoom+.1));$('#
 
 const correct={q1:'b',q2:'c',q3:'a',q4:'d',q5:'b'}, qs=Object.keys(correct);function quiz(){let ans=0,score=0;qs.forEach(q=>{const checked=document.querySelector(`input[name="${q}"]:checked`);if(checked){ans++;if(checked.value===correct[q])score++}});const scoreEl=$('#quizScore'),hitsEl=$('#quizHits'),progress=$('#quizProgress'),status=$('#quizStatus');if(scoreEl)scoreEl.textContent=`${ans}/5`;if(hitsEl)hitsEl.textContent=`${score} ${score===1?'acerto':'acertos'}`;if(progress)progress.style.width=`${ans/5*100}%`;if(status)status.textContent=ans===0?'Comece pela primeira pergunta.':ans<5?`${ans} de 5 respondidas • ${score} ${score===1?'acerto':'acertos'}`:`Finalizado • ${score} de 5 corretas`;};document.querySelectorAll('.quiz-q input[type=radio]').forEach(i=>{i.addEventListener('change',quiz);i.addEventListener('click',()=>setTimeout(quiz,0));});quiz();
 function calc(){const inp=$('#kgWeek');const raw=(inp?.value||'').toString().trim().replace(',','.');const kg=Math.max(0,parseFloat(raw)||0);const annual=kg*52;const res=$('#annualResult');if(res){res.innerHTML=`${annual.toLocaleString('pt-BR',{maximumFractionDigits:1})} kg<br>em 1 ano`;}}const kgInp=$('#kgWeek'),calcFrm=$('#calcForm'),calcBtn=$('#calcBtn');if(kgInp){['input','change','keyup','blur','paste'].forEach(evt=>kgInp.addEventListener(evt,calc));}if(calcFrm){calcFrm.addEventListener('submit',e=>{e.preventDefault();calc();kgInp?.blur();});}if(calcBtn){calcBtn.addEventListener('click',e=>{e.preventDefault();calc();});calcBtn.addEventListener('touchend',e=>{e.preventDefault();calc();});}calc();
-$('#suggestForm')?.addEventListener('submit',e=>{e.preventDefault();$('#formSuccess').classList.add('show');e.currentTarget.reset();setTimeout(()=>$('#formSuccess').classList.remove('show'),3500)});
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbxcQ6GUeVHg3MiIMC1GYQgauEnJZW7RESC8balssQgNaHV2uRU3jmhmEosF75ZtOQNH/exec';
+$('#suggestForm')?.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const form=e.currentTarget, inputs=form.querySelectorAll('input, select, textarea'), btn=form.querySelector('button[type="submit"]');
+  const payload={
+    nome: inputs[0]?.value||'',
+    endereco: inputs[1]?.value||'',
+    tipo: inputs[2]?.value||'',
+    contato: inputs[3]?.value||'',
+    observacoes: inputs[4]?.value||''
+  };
+  if(btn) btn.disabled=true;
+  try {
+    await fetch(SCRIPT_URL, {
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    });
+    $('#formSuccess').classList.add('show');
+    form.reset();
+    setTimeout(()=>$('#formSuccess').classList.remove('show'),3500);
+  } catch(err) {
+    console.error('Erro ao enviar sugestão:', err);
+  } finally {
+    if(btn) btn.disabled=false;
+  }
+});
 function updateHeroPointers(){const container=$('.hero-art'),planet=$('.hero-art .planet');if(!container||!planet)return;const cR=container.getBoundingClientRect(),pR=planet.getBoundingClientRect();const cx=(pR.left+pR.width/2)-cR.left,cy=(pR.top+pR.height/2)-cR.top;const items=[{sel:'.tag1',id:'#line-reciclaveis'},{sel:'.tag2',id:'#line-eletronicos'},{sel:'.tag3',id:'#line-organicos'},{sel:'.tag4',id:'#line-medicamentos'}];items.forEach(({sel,id})=>{const tag=$(sel,container),line=$(id,container);if(!tag||!line)return;const tR=tag.getBoundingClientRect();const tx=(tR.left+tR.width/2)-cR.left,ty=(tR.top+tR.height/2)-cR.top;const angle=Math.atan2(ty-cy,tx-cx);const pRadius=(pR.width/2)+2;const startX=cx+Math.cos(angle)*pRadius,startY=cy+Math.sin(angle)*pRadius;const tHalfW=tR.width/2,tHalfH=tR.height/2;const distToBorder=Math.min(Math.abs(tHalfW/(Math.cos(angle)||0.001)),Math.abs(tHalfH/(Math.sin(angle)||0.001)));const endMargin=distToBorder+6;const endX=tx-Math.cos(angle)*endMargin,endY=ty-Math.sin(angle)*endMargin;line.setAttribute('x1',startX.toFixed(1));line.setAttribute('y1',startY.toFixed(1));line.setAttribute('x2',endX.toFixed(1));line.setAttribute('y2',endY.toFixed(1));});}window.addEventListener('resize',updateHeroPointers);window.addEventListener('load',updateHeroPointers);setTimeout(updateHeroPointers,50);setTimeout(updateHeroPointers,300);updateHeroPointers();
 apply();
 if(!$('.point.is-selected')){const first=$$('.point.filterable').find(p=>!p.hidden&&!p.classList.contains('js-hidden'));if(first)selectMapPoint(first.dataset.point,false);}
