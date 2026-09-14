@@ -312,7 +312,11 @@ const catToggle=$('#catToggle'),regionToggle=$('#regionToggle');
 function closeFilters(){if(catToggle)catToggle.checked=false;if(regionToggle)regionToggle.checked=false}
 [catToggle,regionToggle].forEach(t=>t?.addEventListener('change',()=>{if(t.checked){const other=t===catToggle?regionToggle:catToggle;if(other)other.checked=false}}));
 $$('.filter-action.done').forEach(lbl=>{lbl.addEventListener('click',()=>{apply();setTimeout(closeFilters,0)});lbl.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();apply();closeFilters()}})});
-document.addEventListener('pointerdown',e=>{if(!e.target.closest('.filter-block')&&!e.target.closest('.filter-toggle'))closeFilters()});
+document.addEventListener('pointerdown',e=>{
+  if(!e.target.closest('.filter-block')&&!e.target.closest('.filter-toggle'))closeFilters();
+  const m=$('details.menu');if(m&&m.hasAttribute('open')&&!m.contains(e.target))m.removeAttribute('open');
+});
+$$('details.menu a').forEach(a=>a.addEventListener('click',()=>$('details.menu')?.removeAttribute('open')));
 $('#clearBtn')?.addEventListener('click',()=>{$$('input[name=cat-filter],input[name=region-filter]').forEach(i=>i.checked=false);$('#pointSearch').value='';closeFilters();apply()});
 function syncOpenCategory(){
   const current=location.hash||'';
